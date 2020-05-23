@@ -15,6 +15,7 @@ const flappyBird = {
   y: 50,
   speed: 0,
   gravity: 0.75,
+  jumpSpeed: -10,
   draw() {
     contexto.drawImage(
       sprites,
@@ -29,8 +30,14 @@ const flappyBird = {
     )
   },
   update() {
-    flappyBird.speed = flappyBird.speed + flappyBird.gravity
-    flappyBird.y = flappyBird.y + flappyBird.speed
+    if (colision(flappyBird, ground)) {
+      flappyBird.speed = flappyBird.speed + flappyBird.gravity
+      flappyBird.y = flappyBird.y + flappyBird.speed
+    }
+    console.log(flappyBird.speed)
+  },
+  jump() {
+    flappyBird.speed = flappyBird.jumpSpeed
   },
 }
 
@@ -146,7 +153,9 @@ const screen = {
     update() {
       flappyBird.update()
     },
-    click() {},
+    click() {
+      flappyBird.jump()
+    },
   },
   active: {},
 }
@@ -154,6 +163,8 @@ const screen = {
 function changeScreen(newScreen) {
   screen.active = newScreen
 }
+
+function colision(spriteOne, spriteTwo) {}
 
 function loop() {
   screen.active.update()
