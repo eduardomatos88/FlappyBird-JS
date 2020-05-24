@@ -21,7 +21,7 @@ function createFlappyBird() {
     y: 50,
     speed: 0,
     gravity: 0.3,
-    jumpSpeed: -8,
+    jumpSpeed: -5,
     moves: [
       { spriteX: 0, spriteY: 0 },
       { spriteX: 0, spriteY: 26 },
@@ -44,10 +44,15 @@ function createFlappyBird() {
       )
     },
     update() {
-      if (!colision(global.flappyBird, global.ground)) {
-        global.flappyBird.speed =
-          global.flappyBird.speed + global.flappyBird.gravity
-        global.flappyBird.y = global.flappyBird.y + global.flappyBird.speed
+      if (!collision(global.flappyBird, global.ground)) {
+        if (global.flappyBird.y >= 0) {
+          global.flappyBird.speed =
+            global.flappyBird.speed + global.flappyBird.gravity
+          global.flappyBird.y = global.flappyBird.y + global.flappyBird.speed
+        } else {
+          global.flappyBird.speed = 0
+          global.flappyBird.y = 0
+        }
         return
       } else {
         soundHit.play()
@@ -184,11 +189,82 @@ function createGetReady() {
   return getReady
 }
 
+function createPipe() {
+  const pipe = {
+    width: 52,
+    height: 400,
+    pipeX: 220,
+    ground: {
+      spriteX: 0,
+      spriteY: 169,
+    },
+    sky: {
+      spriteX: 52,
+      spriteY: 169,
+    },
+    pipeSpacing: 90,
+    pairsPipes: [],
+    draw() {
+      this.pairsPipes.forEach((pair) => {
+        const ramdomY = pair.y
+        const pipeX = pair.x
+        const pipeSkyY = -150 - ramdomY
+        const pipeGroundY = pipeSkyY + this.height + this.pipeSpacing
+        contexto.drawImage(
+          sprites,
+          global.pipe.sky.spriteX,
+          global.pipe.sky.spriteY,
+          global.pipe.width,
+          global.pipe.height,
+          pipeX,
+          pipeSkyY,
+          global.pipe.width,
+          global.pipe.height
+        )
+        contexto.drawImage(
+          sprites,
+          global.pipe.ground.spriteX,
+          global.pipe.ground.spriteY,
+          global.pipe.width,
+          global.pipe.height,
+          pipeX,
+          pipeGroundY,
+          global.pipe.width,
+          global.pipe.height
+        )
+        pair.pipeUp = pipeSkyY + this.height
+        pair.pipeDown = pipeGroundY
+      })
+    },
+    update() {
+      const after100Frames = global.frames % 100 === 0
+      if (after100Frames) {
+        global.pipe.pairsPipes.push({
+          x: canvas.width,
+          y: Math.floor(Math.random() * 200),
+        })
+      }
+      this.pairsPipes.forEach((pair) => {
+        pair.x = pair.x - global.speedGround
+        if (pair.x <= -this.width) {
+          global.pipe.pairsPipes.shift()
+        }
+        if (pipeCollision(pair)) {
+          global.pipe.pairsPipes = []
+          soundHit.play()
+          setTimeout(() => changeScreen(screen.initial), 500)
+        }
+      })
+    },
+  }
+  return pipe
+}
 const global = { speedGround: 2, speedBackground: 1, frames: 0 }
 global.flappyBird = createFlappyBird()
 global.ground = createGround()
 global.background = createBackground()
 global.getReady = createGetReady()
+global.pipe = createPipe()
 
 const screen = {
   initial: {
@@ -213,11 +289,13 @@ const screen = {
       global.background.draw()
       global.ground.draw()
       global.flappyBird.draw()
+      global.pipe.draw()
     },
     update() {
       global.flappyBird.update()
       global.background.update()
       global.ground.update()
+      global.pipe.update()
     },
     click() {
       global.flappyBird.jump()
@@ -230,16 +308,28 @@ function changeScreen(newScreen) {
   screen.active = newScreen
 }
 
-function colision(spriteOne, spriteTwo) {
+function collision(spriteOne, spriteTwo) {
   if (spriteOne.y + spriteOne.height - spriteTwo.y > 0) return true
+  return false
+}
+function pipeCollision(pair) {
+  if (global.flappyBird.x + global.flappyBird.width - 5 >= pair.x) {
+    const flappyBirdUp = global.flappyBird.y
+    const flappyBirdDown = flappyBirdUp + global.flappyBird.height
+    const pipeUp = pair.pipeUp
+    const pipeDown = pair.pipeDown
+    if (flappyBirdUp < pipeUp) {
+      return true
+    }
+    if (flappyBirdDown > pipeDown) {
+      return true
+    }
+  }
   return false
 }
 
 function infiniteScreenRoll(x, width) {
   return (x - global.speedGround) % (width / 2)
-  console.log({
-    move: (x - global.speedGround) % (width / 2),
-  })
 }
 
 function loop() {
