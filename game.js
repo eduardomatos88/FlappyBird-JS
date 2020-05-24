@@ -2,10 +2,10 @@ const sprites = new Image()
 sprites.src = "./sprites.png"
 
 const soundHit = new Audio()
-soundHit.src = "./effects/hit.wav"
+soundHit.src = "./audios/hit.wav"
 soundHit.volume = "0.2"
 const soundJump = new Audio()
-soundJump.src = "./effects/jump.wav"
+soundJump.src = "./audios/jump.wav"
 soundJump.volume = "0.2"
 
 const canvas = document.querySelector("canvas")
